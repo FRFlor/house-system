@@ -43,7 +43,7 @@ const isOpen = computed({
 
 const completeChore = async () => {
     if (!props.chore || isSubmitting.value) return;
-
+I
     isSubmitting.value = true;
 
     try {
