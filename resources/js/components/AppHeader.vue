@@ -18,7 +18,7 @@ import UserMenuContent from '@/components/UserMenuContent.vue';
 import { getInitials } from '@/composables/useInitials';
 import type { BreadcrumbItem, NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Menu, Search, Calendar } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Menu, Search, Calendar, List } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 interface Props {
@@ -48,6 +48,11 @@ const mainNavItems: NavItem[] = [
         title: 'Calendar',
         href: '/calendar',
         icon: Calendar,
+    },
+    {
+        title: 'Chores',
+        href: '/chores',
+        icon: List,
     },
 ];
 

@@ -12,7 +12,8 @@ import {
     Calendar,
     TrendingUp,
     Activity,
-    Plus
+    Plus,
+    List
 } from 'lucide-vue-next';
 import ChoreCompletionModal from '@/components/ChoreCompletionModal.vue';
 import { ref } from 'vue';
