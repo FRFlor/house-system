@@ -21,7 +21,7 @@ it('can create a new chore with required fields', function () {
     $choreData = [
         'name' => 'Test Chore',
         'description' => 'A test chore description',
-        'category_id' => $category->id,
+        'category_name' => $category->name,
         'frequency_type' => 'weeks',
         'frequency_value' => 2,
         'next_due_at' => '2024-01-15',
@@ -45,7 +45,7 @@ it('validates required fields when creating a chore', function () {
     
     $response = $this->actingAs($user)->post('/chores', []);
     
-    $response->assertSessionHasErrors(['name', 'category_id', 'frequency_type', 'frequency_value', 'next_due_at']);
+    $response->assertSessionHasErrors(['name', 'category_name', 'frequency_type', 'frequency_value', 'next_due_at']);
 });
 
 it('validates frequency_type is valid when creating a chore', function () {
@@ -54,7 +54,7 @@ it('validates frequency_type is valid when creating a chore', function () {
     
     $choreData = [
         'name' => 'Test Chore',
-        'category_id' => $category->id,
+        'category_name' => $category->name,
         'frequency_type' => 'invalid_frequency',
         'frequency_value' => 1,
         'next_due_at' => '2024-01-15',
@@ -74,7 +74,7 @@ it('can create a ONE_OFF chore', function () {
     
     $choreData = [
         'name' => 'One Time Task',
-        'category_id' => $category->id,
+        'category_name' => $category->name,
         'frequency_type' => 'one_off',
         'frequency_value' => 1,
         'next_due_at' => '2024-01-15',
@@ -115,7 +115,7 @@ it('can create a chore with instruction file path', function () {
     $choreData = [
         'name' => 'Complex Task',
         'description' => 'A complex task with instructions',
-        'category_id' => $category->id,
+        'category_name' => $category->name,
         'frequency_type' => 'months',
         'frequency_value' => 3,
         'next_due_at' => '2024-02-01',
@@ -128,5 +128,57 @@ it('can create a chore with instruction file path', function () {
     $this->assertDatabaseHas('chores', [
         'name' => 'Complex Task',
         'instruction_file_path' => '/instructions/complex-task.pdf',
+    ]);
+});
+
+it('can create a chore with a new category name', function () {
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->post('/chores', [
+        'name' => 'Test Chore',
+        'description' => 'Test Description',
+        'category_name' => 'New Category',
+        'frequency_type' => 'weeks',
+        'frequency_value' => 1,
+        'next_due_at' => '2024-01-15',
+    ]);
+
+    $response->assertRedirect('/dashboard');
+    
+    // Check that the category was created
+    $this->assertDatabaseHas('categories', [
+        'name' => 'New Category',
+    ]);
+    
+    // Check that the chore was created with the new category
+    $category = Category::where('name', 'New Category')->first();
+    $this->assertDatabaseHas('chores', [
+        'name' => 'Test Chore',
+        'category_id' => $category->id,
+    ]);
+});
+
+it('can create a chore with an existing category name', function () {
+    $user = User::factory()->create();
+    $existingCategory = Category::factory()->create(['name' => 'Existing Category']);
+
+    $response = $this->actingAs($user)->post('/chores', [
+        'name' => 'Test Chore',
+        'description' => 'Test Description',
+        'category_name' => 'Existing Category',
+        'frequency_type' => 'weeks',
+        'frequency_value' => 1,
+        'next_due_at' => '2024-01-15',
+    ]);
+
+    $response->assertRedirect('/dashboard');
+    
+    // Check that no new category was created
+    $this->assertEquals(1, Category::where('name', 'Existing Category')->count());
+    
+    // Check that the chore was created with the existing category
+    $this->assertDatabaseHas('chores', [
+        'name' => 'Test Chore',
+        'category_id' => $existingCategory->id,
     ]);
 }); 

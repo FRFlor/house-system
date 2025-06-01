@@ -23,7 +23,7 @@ const props = defineProps<Props>()
 const form = useForm({
   name: '',
   description: '',
-  category_id: '',
+  category_name: '',
   frequency_type: '',
   frequency_value: 1,
   next_due_at: '',
@@ -117,25 +117,27 @@ if (!form.next_due_at) {
             <!-- Category -->
             <div class="space-y-2">
               <Label for="category">Category *</Label>
-              <select
+              <Input
                 id="category"
-                v-model="form.category_id"
-                class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                :class="{ 'border-red-500': form.errors.category_id }"
-              >
-                <option value="">Select a category</option>
+                v-model="form.category_name"
+                list="categories"
+                placeholder="Type to search or create new category..."
+                :class="{ 'border-red-500': form.errors.category_name }"
+              />
+              <datalist id="categories">
                 <option 
                   v-for="category in categories" 
                   :key="category.id" 
-                  :value="category.id.toString()"
-                >
-                  {{ category.name }}
-                </option>
-              </select>
-              <div v-if="form.errors.category_id" class="flex items-center space-x-1 text-sm text-red-600">
+                  :value="category.name"
+                />
+              </datalist>
+              <div v-if="form.errors.category_name" class="flex items-center space-x-1 text-sm text-red-600">
                 <AlertCircle class="h-4 w-4" />
-                <span>{{ form.errors.category_id }}</span>
+                <span>{{ form.errors.category_name }}</span>
               </div>
+              <p class="text-sm text-muted-foreground">
+                Start typing to see existing categories or create a new one
+              </p>
             </div>
             
             <!-- Frequency -->
