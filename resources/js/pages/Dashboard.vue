@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head, router } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -13,6 +13,8 @@ import {
     TrendingUp,
     Activity
 } from 'lucide-vue-next';
+import ChoreCompletionModal from '@/components/ChoreCompletionModal.vue';
+import { ref } from 'vue';
 
 interface Chore {
     id: number;
@@ -57,7 +59,7 @@ interface Props {
     stats: Stats;
 }
 
-const props = defineProps<Props>();
+defineProps<Props>();
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -66,10 +68,17 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const completeChore = (chore: Chore) => {
-    router.post(`/chores/${chore.id}/complete`, {}, {
-        preserveScroll: true,
-    });
+const selectedChore = ref<Chore | null>(null);
+const isModalOpen = ref(false);
+
+const openCompletionModal = (chore: Chore) => {
+    selectedChore.value = chore;
+    isModalOpen.value = true;
+};
+
+const closeCompletionModal = () => {
+    selectedChore.value = null;
+    isModalOpen.value = false;
 };
 
 const formatDate = (dateString: string) => {
@@ -193,7 +202,7 @@ const getFrequencyLabel = (type: string, value: number) => {
                                     </div>
                                 </div>
                                 <Button 
-                                    @click="completeChore(chore)"
+                                    @click="openCompletionModal(chore)"
                                     size="sm"
                                     class="ml-4"
                                 >
@@ -230,7 +239,7 @@ const getFrequencyLabel = (type: string, value: number) => {
                                     </div>
                                 </div>
                                 <Button 
-                                    @click="completeChore(chore)"
+                                    @click="openCompletionModal(chore)"
                                     size="sm"
                                     variant="default"
                                     class="ml-4"
@@ -269,7 +278,7 @@ const getFrequencyLabel = (type: string, value: number) => {
                                     </div>
                                 </div>
                                 <Button 
-                                    @click="completeChore(chore)"
+                                    @click="openCompletionModal(chore)"
                                     size="sm"
                                     variant="outline"
                                     class="ml-4"
@@ -354,4 +363,10 @@ const getFrequencyLabel = (type: string, value: number) => {
             </div>
         </div>
     </AppLayout>
+
+    <ChoreCompletionModal
+        :open="isModalOpen"
+        :chore="selectedChore"
+        @close="closeCompletionModal"
+    />
 </template>
