@@ -3,6 +3,7 @@
 use App\Enums\FrequencyType;
 use App\Models\Category;
 use App\Models\Chore;
+use Carbon\Carbon;
 
 test('chore can be created with required fields', function () {
     $category = Category::factory()->create();
@@ -38,6 +39,11 @@ test('chore frequency_value is required', function () {
         ->toThrow(\Illuminate\Database\QueryException::class);
 });
 
+test('chore next_due_at is required', function () {
+    expect(fn() => Chore::factory()->create(['next_due_at' => null]))
+        ->toThrow(\Illuminate\Database\QueryException::class);
+});
+
 test('chore frequency_type must be valid', function () {
     // This should throw an exception because 'invalid' is not a valid FrequencyType enum value
     expect(fn() => Chore::factory()->create(['frequency_type' => 'invalid']))
@@ -59,12 +65,25 @@ test('chore can have instruction file path', function () {
     expect($chore->instruction_file_path)->toBe('instructions/furnace-filter.md');
 });
 
+test('chore can be created with specific next due date for calendar-based scheduling', function () {
+    $nextSeptember1st = Carbon::create(2025, 9, 1);
+    
+    $chore = Chore::factory()->create([
+        'name' => 'Clean Gutters',
+        'frequency_type' => FrequencyType::YEARS,
+        'frequency_value' => 1,
+        'next_due_at' => $nextSeptember1st,
+    ]);
+    
+    expect($chore->next_due_at->format('Y-m-d'))->toBe('2025-09-01');
+});
+
 test('chore calculates next due date when completed with months', function () {
     $chore = Chore::factory()->create([
         'frequency_type' => FrequencyType::MONTHS,
         'frequency_value' => 3,
         'last_completed_at' => null,
-        'next_due_at' => null,
+        'next_due_at' => now(),
     ]);
     
     $completedAt = now();
@@ -83,7 +102,7 @@ test('chore calculates next due date when completed with weeks', function () {
         'frequency_type' => FrequencyType::WEEKS,
         'frequency_value' => 2,
         'last_completed_at' => null,
-        'next_due_at' => null,
+        'next_due_at' => now(),
     ]);
     
     $completedAt = now();
@@ -102,7 +121,7 @@ test('chore calculates next due date when completed with years', function () {
         'frequency_type' => FrequencyType::YEARS,
         'frequency_value' => 1,
         'last_completed_at' => null,
-        'next_due_at' => null,
+        'next_due_at' => now(),
     ]);
     
     $completedAt = now();
@@ -114,6 +133,28 @@ test('chore calculates next due date when completed with years', function () {
     
     expect($chore->last_completed_at->format('Y-m-d H:i:s'))->toBe($completedAt->format('Y-m-d H:i:s'));
     expect($chore->next_due_at->format('Y-m-d H:i:s'))->toBe($expectedNextDue->format('Y-m-d H:i:s'));
+});
+
+test('chore maintains calendar-based scheduling when completed', function () {
+    // Set up a chore due on September 1st, 2025
+    $september1st2025 = Carbon::create(2025, 9, 1);
+    
+    $chore = Chore::factory()->create([
+        'name' => 'Clean Gutters',
+        'frequency_type' => FrequencyType::YEARS,
+        'frequency_value' => 1,
+        'next_due_at' => $september1st2025,
+    ]);
+    
+    // Complete it on any date (e.g., August 30th)
+    $completedAt = Carbon::create(2025, 8, 30);
+    $chore->markAsCompleted($completedAt);
+    
+    // Should be due September 1st of the following year
+    $expectedNextDue = Carbon::create(2026, 9, 1);
+    
+    $chore->refresh();
+    expect($chore->next_due_at->format('Y-m-d'))->toBe($expectedNextDue->format('Y-m-d'));
 });
 
 test('chore can have many completions', function () {

@@ -42,7 +42,7 @@ class ChoreFactory extends Factory
             'frequency_value' => $frequencyValue,
             'instruction_file_path' => fake()->optional()->filePath(),
             'last_completed_at' => fake()->optional()->dateTimeBetween('-1 year'),
-            'next_due_at' => fake()->optional()->dateTimeBetween('now', '+1 year'),
+            'next_due_at' => fake()->dateTimeBetween('now', '+1 year'),
         ];
     }
 } 

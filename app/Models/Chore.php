@@ -43,10 +43,14 @@ class Chore extends Model
     {
         $completedAt = $completedAt ?? now();
         
+        // For calendar-based scheduling, we want to preserve the month/day
+        // and just advance the year/month/week as appropriate
+        $currentNextDue = $this->next_due_at;
+        
         $nextDueAt = match ($this->frequency_type) {
             FrequencyType::WEEKS => $completedAt->copy()->addWeeks($this->frequency_value),
-            FrequencyType::MONTHS => $completedAt->copy()->addMonths($this->frequency_value),
-            FrequencyType::YEARS => $completedAt->copy()->addYears($this->frequency_value),
+            FrequencyType::MONTHS => $this->calculateNextMonthlyDue($currentNextDue, $this->frequency_value),
+            FrequencyType::YEARS => $this->calculateNextYearlyDue($currentNextDue, $this->frequency_value),
         };
         
         $this->update([
@@ -55,5 +59,17 @@ class Chore extends Model
         ]);
         
         return $this;
+    }
+
+    private function calculateNextMonthlyDue($currentDue, $months)
+    {
+        // Preserve the day of month, advance by X months
+        return $currentDue->copy()->addMonths($months);
+    }
+
+    private function calculateNextYearlyDue($currentDue, $years)
+    {
+        // Preserve the month and day, advance by X years
+        return $currentDue->copy()->addYears($years);
     }
 } 
