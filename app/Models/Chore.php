@@ -51,6 +51,7 @@ class Chore extends Model
             FrequencyType::WEEKS => $completedAt->copy()->addWeeks($this->frequency_value),
             FrequencyType::MONTHS => $this->calculateNextMonthlyDue($currentNextDue, $this->frequency_value),
             FrequencyType::YEARS => $this->calculateNextYearlyDue($currentNextDue, $this->frequency_value),
+            FrequencyType::ONE_OFF => null, // One-time tasks don't repeat
         };
         
         $this->update([

@@ -23,6 +23,7 @@ class ChoreFactory extends Factory
             FrequencyType::WEEKS => fake()->numberBetween(1, 4),
             FrequencyType::MONTHS => fake()->numberBetween(1, 12),
             FrequencyType::YEARS => fake()->numberBetween(1, 5),
+            FrequencyType::ONE_OFF => 1, // Always 1 for one-off tasks
         };
 
         return [

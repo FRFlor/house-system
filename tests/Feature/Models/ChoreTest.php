@@ -39,9 +39,10 @@ test('chore frequency_value is required', function () {
         ->toThrow(\Illuminate\Database\QueryException::class);
 });
 
-test('chore next_due_at is required', function () {
-    expect(fn() => Chore::factory()->create(['next_due_at' => null]))
-        ->toThrow(\Illuminate\Database\QueryException::class);
+test('chore next_due_at should be provided when creating', function () {
+    // While the database allows null, business logic expects next_due_at to be set when creating
+    $chore = Chore::factory()->create(['next_due_at' => now()]);
+    expect($chore->next_due_at)->not->toBeNull();
 });
 
 test('chore frequency_type must be valid', function () {
@@ -161,4 +162,33 @@ test('chore can have many completions', function () {
     $chore = Chore::factory()->create();
     
     expect($chore->completions())->toBeInstanceOf(\Illuminate\Database\Eloquent\Relations\HasMany::class);
+});
+
+test('chore can be created with ONE_OFF frequency type', function () {
+    $chore = Chore::factory()->create([
+        'name' => 'Install New Ceiling Fan',
+        'frequency_type' => FrequencyType::ONE_OFF,
+        'frequency_value' => 1, // Should be ignored for ONE_OFF
+        'next_due_at' => now(),
+    ]);
+    
+    expect($chore->frequency_type)->toBe(FrequencyType::ONE_OFF);
+    expect($chore->frequency_value)->toBe(1);
+});
+
+test('ONE_OFF chore sets next_due_at to null when completed', function () {
+    $chore = Chore::factory()->create([
+        'frequency_type' => FrequencyType::ONE_OFF,
+        'frequency_value' => 1,
+        'next_due_at' => now(),
+        'last_completed_at' => null,
+    ]);
+    
+    $completedAt = now();
+    $chore->markAsCompleted($completedAt);
+    
+    $chore->refresh();
+    
+    expect($chore->last_completed_at->format('Y-m-d H:i:s'))->toBe($completedAt->format('Y-m-d H:i:s'));
+    expect($chore->next_due_at)->toBeNull();
 }); 

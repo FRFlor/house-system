@@ -20,7 +20,7 @@ return new class extends Migration
             $table->integer('frequency_value');
             $table->string('instruction_file_path')->nullable();
             $table->timestamp('last_completed_at')->nullable();
-            $table->timestamp('next_due_at');
+            $table->timestamp('next_due_at')->nullable();
             $table->timestamps();
         });
     }

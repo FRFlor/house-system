@@ -7,6 +7,7 @@ enum FrequencyType: string
     case WEEKS = 'weeks';
     case MONTHS = 'months';
     case YEARS = 'years';
+    case ONE_OFF = 'one_off';
 
     public function label(): string
     {
@@ -14,6 +15,7 @@ enum FrequencyType: string
             self::WEEKS => 'Week(s)',
             self::MONTHS => 'Month(s)',
             self::YEARS => 'Year(s)',
+            self::ONE_OFF => 'One-time only',
         };
     }
 
