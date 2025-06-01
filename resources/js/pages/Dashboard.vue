@@ -174,7 +174,7 @@ const getFrequencyLabel = (type: string, value: number) => {
             </div>
 
             <!-- Quick Actions -->
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
                 <div>
                     <h2 class="text-xl font-semibold">Your Chores</h2>
                     <p class="text-sm text-muted-foreground">Manage and track your household tasks</p>
