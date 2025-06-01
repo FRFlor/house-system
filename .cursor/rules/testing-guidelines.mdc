@@ -1,0 +1,23 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# General
+- You do not need to run migrations before testing. Migrations are ran automatically against the test database due to Illuminate\Foundation\Testing\RefreshDatabase::class in Pest.php
+
+
+# Unit Tests
+
+- Unit tests (located in the tests/Unit folder) should not require the laravel app to run. 
+- These tests should not involve communications with the database. 
+
+- For example, testing a helper function that multiplies 2 numbers can be a unit test. 
+
+
+# Feature Tests
+
+- Feature Tests (located in the tests/Feature folder) can involve communication to the Database. 
+- If you want to write tests for a specific model, you can add it to the tests/Feature/Models folder. 
+
+
