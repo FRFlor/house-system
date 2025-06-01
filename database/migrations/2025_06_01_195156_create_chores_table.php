@@ -16,7 +16,8 @@ return new class extends Migration
             $table->foreignId('category_id')->nullable()->constrained()->onDelete('set null');
             $table->string('name');
             $table->text('description')->nullable();
-            $table->integer('frequency_months');
+            $table->string('frequency_type');
+            $table->integer('frequency_value');
             $table->string('instruction_file_path')->nullable();
             $table->timestamp('last_completed_at')->nullable();
             $table->timestamp('next_due_at')->nullable();

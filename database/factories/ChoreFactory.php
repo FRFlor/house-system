@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\FrequencyType;
 use App\Models\Category;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -17,6 +18,13 @@ class ChoreFactory extends Factory
      */
     public function definition(): array
     {
+        $frequencyType = fake()->randomElement(FrequencyType::cases());
+        $frequencyValue = match ($frequencyType) {
+            FrequencyType::WEEKS => fake()->numberBetween(1, 4),
+            FrequencyType::MONTHS => fake()->numberBetween(1, 12),
+            FrequencyType::YEARS => fake()->numberBetween(1, 5),
+        };
+
         return [
             'category_id' => Category::factory(),
             'name' => fake()->randomElement([
@@ -30,7 +38,8 @@ class ChoreFactory extends Factory
                 'Clean Windows',
             ]),
             'description' => fake()->sentence(),
-            'frequency_months' => fake()->randomElement([1, 3, 6, 12]),
+            'frequency_type' => $frequencyType,
+            'frequency_value' => $frequencyValue,
             'instruction_file_path' => fake()->optional()->filePath(),
             'last_completed_at' => fake()->optional()->dateTimeBetween('-1 year'),
             'next_due_at' => fake()->optional()->dateTimeBetween('now', '+1 year'),
