@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -11,7 +11,8 @@ import {
     CheckCircle2, 
     Calendar,
     TrendingUp,
-    Activity
+    Activity,
+    Plus
 } from 'lucide-vue-next';
 import ChoreCompletionModal from '@/components/ChoreCompletionModal.vue';
 import { ref } from 'vue';
@@ -171,6 +172,31 @@ const getFrequencyLabel = (type: string, value: number) => {
                 </Card>
             </div>
 
+            <!-- Quick Actions -->
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-xl font-semibold">Your Chores</h2>
+                    <p class="text-sm text-muted-foreground">Manage and track your household tasks</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <Button 
+                        @click="router.visit('/calendar')"
+                        variant="outline"
+                        size="sm"
+                    >
+                        <Calendar class="mr-2 h-4 w-4" />
+                        Calendar View
+                    </Button>
+                    <Button 
+                        @click="router.visit('/chores/create')"
+                        size="sm"
+                    >
+                        <Plus class="mr-2 h-4 w-4" />
+                        Create Chore
+                    </Button>
+                </div>
+            </div>
+
             <!-- Main Content Grid -->
             <div class="grid gap-6 lg:grid-cols-3">
                 <!-- Left Column - Chore Lists -->
@@ -292,11 +318,15 @@ const getFrequencyLabel = (type: string, value: number) => {
 
                     <!-- Empty State -->
                     <Card v-if="overdue_chores.length === 0 && due_today.length === 0 && upcoming_chores.length === 0" class="p-8 text-center">
-                        <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/20">
-                            <CheckCircle2 class="h-8 w-8 text-green-600 dark:text-green-400" />
+                        <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/20">
+                            <Plus class="h-8 w-8 text-blue-600 dark:text-blue-400" />
                         </div>
-                        <h3 class="mb-2 text-lg font-semibold">All caught up!</h3>
-                        <p class="text-muted-foreground">No chores are due right now. Great job staying on top of things!</p>
+                        <h3 class="mb-2 text-lg font-semibold">No chores yet</h3>
+                        <p class="mb-4 text-muted-foreground">Get started by creating your first chore to track and manage your household tasks.</p>
+                        <Button @click="router.visit('/chores/create')">
+                            <Plus class="mr-2 h-4 w-4" />
+                            Create Your First Chore
+                        </Button>
                     </Card>
                 </div>
 

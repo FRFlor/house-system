@@ -10,7 +10,7 @@ Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('home');
 
-Route::get('dashboard', [DashboardController::class, 'index'])
+Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
@@ -18,6 +18,12 @@ Route::get('/calendar', [CalendarController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('calendar');
 
+Route::get('/chores/create', [ChoreController::class, 'create'])
+    ->middleware(['auth', 'verified'])
+    ->name('chores.create');
+Route::post('/chores', [ChoreController::class, 'store'])
+    ->middleware(['auth', 'verified'])
+    ->name('chores.store');
 Route::post('/chores/{chore}/complete', [ChoreController::class, 'complete'])
     ->middleware(['auth', 'verified'])
     ->name('chores.complete');
