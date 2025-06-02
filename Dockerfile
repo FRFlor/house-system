@@ -38,6 +38,12 @@ COPY . /var/www
 # Copy the existing application directory permissions to the working directory
 COPY --chown=www-data:www-data . /var/www
 
+RUN apt-get update && apt-get install -y gnupg curl
+
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # Change current user to www
 USER www-data
 
