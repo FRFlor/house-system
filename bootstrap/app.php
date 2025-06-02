@@ -23,7 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->trustProxies(at: [
-            '127.0.0.1',
+            '*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
