@@ -29,21 +29,21 @@ services:
         networks:
             - app-network
 
-    db:
-        image: mysql:8.4.5
-        container_name: mysql
-        restart: unless-stopped
-        environment:
-            MYSQL_DATABASE: laravel
-            MYSQL_ROOT_PASSWORD: root
-            MYSQL_PASSWORD: laravel
-            MYSQL_USER: laravel
-        ports:
-            - "${DB_HOST_PORT:-3306}:3306"
-        volumes:
-            - dbdata:/var/lib/mysql
-        networks:
-            - app-network
+#    db:
+#        image: mysql:8.4.5
+#        container_name: mysql
+#        restart: unless-stopped
+#        environment:
+#            MYSQL_DATABASE: laravel
+#            MYSQL_ROOT_PASSWORD: root
+#            MYSQL_PASSWORD: laravel
+#            MYSQL_USER: laravel
+#        ports:
+#            - "${DB_HOST_PORT:-3306}:3306"
+#        volumes:
+#            - dbdata:/var/lib/mysql
+#        networks:
+#            - app-network
 
 networks:
     app-network:
