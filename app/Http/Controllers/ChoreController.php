@@ -171,7 +171,7 @@ class ChoreController extends Controller
 
         $chore->update($validated);
 
-        return redirect('/chores')->with('success', 'Chore updated successfully!');
+        return redirect()->back()->with('success', 'Chore updated successfully!');
     }
 
     public function complete(Request $request, Chore $chore): RedirectResponse

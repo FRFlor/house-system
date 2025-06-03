@@ -134,4 +134,60 @@ test('chore completion can include success message', function () {
 
     $response->assertRedirect();
     $response->assertSessionHas('success');
+});
+
+test('chore can be delayed by updating next_due_at', function () {
+    $chore = Chore::factory()->create([
+        'frequency_type' => FrequencyType::WEEKS,
+        'frequency_value' => 1,
+        'next_due_at' => Carbon::today(), // Due today
+    ]);
+
+    $delayedDate = Carbon::today()->addDays(3);
+
+    $response = $this->put(route('chores.update', $chore), [
+        'name' => $chore->name,
+        'description' => $chore->description,
+        'category_id' => $chore->category_id,
+        'frequency_type' => $chore->frequency_type->value,
+        'frequency_value' => $chore->frequency_value,
+        'next_due_at' => $delayedDate->format('Y-m-d'),
+    ]);
+
+    $response->assertRedirect();
+    
+    $chore->refresh();
+    
+    // Should be delayed by 3 days from today
+    expect($chore->next_due_at->format('Y-m-d'))->toBe($delayedDate->format('Y-m-d'));
+});
+
+test('chore update allows changing next_due_at for delay functionality', function () {
+    $chore = Chore::factory()->create([
+        'next_due_at' => Carbon::today(),
+    ]);
+
+    $delayOptions = [
+        Carbon::today()->addDay(),      // 1 day
+        Carbon::today()->addDays(3),    // 3 days  
+        Carbon::today()->addWeek(),     // 1 week
+        Carbon::today()->addMonth(),    // 1 month
+    ];
+    
+    foreach ($delayOptions as $delayedDate) {
+        $response = $this->put(route('chores.update', $chore), [
+            'name' => $chore->name,
+            'description' => $chore->description,
+            'category_id' => $chore->category_id,
+            'frequency_type' => $chore->frequency_type->value,
+            'frequency_value' => $chore->frequency_value,
+            'next_due_at' => $delayedDate->format('Y-m-d'),
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHasNoErrors();
+        
+        $chore->refresh();
+        expect($chore->next_due_at->format('Y-m-d'))->toBe($delayedDate->format('Y-m-d'));
+    }
 }); 

@@ -16,6 +16,7 @@ import {
     List
 } from 'lucide-vue-next';
 import ChoreCompletionModal from '@/components/ChoreCompletionModal.vue';
+import DelayChoreModal from '@/components/DelayChoreModal.vue';
 import { ref } from 'vue';
 
 interface Chore {
@@ -24,6 +25,7 @@ interface Chore {
     next_due_at: string;
     frequency_type: string;
     frequency_value: number;
+    description?: string;
     category: {
         id: number;
         name: string;
@@ -71,16 +73,27 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 const selectedChore = ref<Chore | null>(null);
-const isModalOpen = ref(false);
+const isCompletionModalOpen = ref(false);
+const isDelayModalOpen = ref(false);
 
 const openCompletionModal = (chore: Chore) => {
     selectedChore.value = chore;
-    isModalOpen.value = true;
+    isCompletionModalOpen.value = true;
 };
 
 const closeCompletionModal = () => {
     selectedChore.value = null;
-    isModalOpen.value = false;
+    isCompletionModalOpen.value = false;
+};
+
+const openDelayModal = (chore: Chore) => {
+    selectedChore.value = chore;
+    isDelayModalOpen.value = true;
+};
+
+const closeDelayModal = () => {
+    selectedChore.value = null;
+    isDelayModalOpen.value = false;
 };
 
 const formatDate = (dateString: string) => {
@@ -228,14 +241,24 @@ const getFrequencyLabel = (type: string, value: number) => {
                                         <span>{{ getFrequencyLabel(chore.frequency_type, chore.frequency_value) }}</span>
                                     </div>
                                 </div>
-                                <Button 
-                                    @click="openCompletionModal(chore)"
-                                    size="sm"
-                                    class="ml-4"
-                                >
-                                    <CheckCircle2 class="mr-1 h-4 w-4" />
-                                    Complete
-                                </Button>
+                                <div class="flex items-center space-x-2 ml-4">
+                                    <Button 
+                                        @click="openDelayModal(chore)"
+                                        size="sm"
+                                        variant="outline"
+                                        class="border-orange-200 text-orange-600 hover:bg-orange-50"
+                                    >
+                                        <Clock class="mr-1 h-4 w-4" />
+                                        Delay
+                                    </Button>
+                                    <Button 
+                                        @click="openCompletionModal(chore)"
+                                        size="sm"
+                                    >
+                                        <CheckCircle2 class="mr-1 h-4 w-4" />
+                                        Complete
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     </Card>
@@ -265,15 +288,25 @@ const getFrequencyLabel = (type: string, value: number) => {
                                         <span>{{ getFrequencyLabel(chore.frequency_type, chore.frequency_value) }}</span>
                                     </div>
                                 </div>
-                                <Button 
-                                    @click="openCompletionModal(chore)"
-                                    size="sm"
-                                    variant="default"
-                                    class="ml-4"
-                                >
-                                    <CheckCircle2 class="mr-1 h-4 w-4" />
-                                    Complete
-                                </Button>
+                                <div class="flex items-center space-x-2 ml-4">
+                                    <Button 
+                                        @click="openDelayModal(chore)"
+                                        size="sm"
+                                        variant="outline"
+                                        class="border-orange-200 text-orange-600 hover:bg-orange-50"
+                                    >
+                                        <Clock class="mr-1 h-4 w-4" />
+                                        Delay
+                                    </Button>
+                                    <Button 
+                                        @click="openCompletionModal(chore)"
+                                        size="sm"
+                                        variant="default"
+                                    >
+                                        <CheckCircle2 class="mr-1 h-4 w-4" />
+                                        Complete
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     </Card>
@@ -396,8 +429,14 @@ const getFrequencyLabel = (type: string, value: number) => {
     </AppLayout>
 
     <ChoreCompletionModal
-        :open="isModalOpen"
+        :open="isCompletionModalOpen"
         :chore="selectedChore"
         @close="closeCompletionModal"
+    />
+
+    <DelayChoreModal
+        :open="isDelayModalOpen"
+        :chore="selectedChore"
+        @close="closeDelayModal"
     />
 </template>
