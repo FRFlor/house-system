@@ -171,6 +171,10 @@ class ChoreController extends Controller
 
         $chore->update($validated);
 
+        if (url()->previous() === route('chores.edit', $chore)) {
+            return redirect('/chores')->with('success', 'Chore updated successfully!');
+        }
+
         return redirect()->back()->with('success', 'Chore updated successfully!');
     }
 

@@ -34,7 +34,9 @@ it('can update a chore', function () {
         'instruction_file_path' => '/updated/path.pdf',
     ];
 
-    $response = $this->actingAs(User::factory()->create())->put("/chores/{$chore->id}", $updateData);
+    $this->actingAs(User::factory()->create())->get("/chores/{$chore->id}/edit");
+
+    $response = $this->put("/chores/{$chore->id}", $updateData);
 
     $response->assertRedirect('/chores');
     $this->assertDatabaseHas('chores', [
@@ -60,7 +62,9 @@ it('can update a chore with a new category name', function () {
         'next_due_at' => '2024-02-15',
     ];
 
-    $response = $this->actingAs(User::factory()->create())->put("/chores/{$chore->id}", $updateData);
+    $this->actingAs(User::factory()->create())->get("/chores/{$chore->id}/edit");
+
+    $response = $this->put("/chores/{$chore->id}", $updateData);
 
     $response->assertRedirect('/chores');
 

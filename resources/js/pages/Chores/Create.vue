@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { Head, useForm, router } from '@inertiajs/vue3'
+import { ref, computed } from 'vue'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Plus, AlertCircle } from 'lucide-vue-next'
-import { computed } from 'vue'
 
 interface Category {
   id: number
@@ -23,11 +24,19 @@ const props = defineProps<Props>()
 const form = useForm({
   name: '',
   description: '',
+  category_id: null as number | null,
   category_name: '',
   frequency_type: '',
   frequency_value: 1,
   next_due_at: '',
   instruction_file_path: '',
+})
+
+const isNewCategory = ref(false)
+
+const selectedCategory = computed(() => {
+  if (isNewCategory.value) return null
+  return props.categories.find(cat => cat.id === form.category_id)
 })
 
 const frequencyOptions = [
@@ -39,7 +48,28 @@ const frequencyOptions = [
 
 const isOneOff = computed(() => form.frequency_type === 'one_off')
 
+const handleCategoryChange = (value: string) => {
+  if (value === 'new') {
+    isNewCategory.value = true
+    form.category_id = null
+    form.category_name = ''
+  } else {
+    isNewCategory.value = false
+    form.category_id = parseInt(value)
+    form.category_name = ''
+  }
+}
+
 const submit = () => {
+  // Prepare the data based on whether we're creating a new category or using existing
+  if (isNewCategory.value) {
+    // Creating new category - clear category_id, keep category_name
+    form.category_id = null
+  } else {
+    // Using existing category - keep category_id, clear category_name
+    form.category_name = ''
+  }
+  
   form.post('/chores', {
     onSuccess: () => {
       // Form will redirect to dashboard on success
@@ -117,27 +147,55 @@ if (!form.next_due_at) {
             <!-- Category -->
             <div class="space-y-2">
               <Label for="category">Category *</Label>
-              <Input
-                id="category"
-                v-model="form.category_name"
-                list="categories"
-                placeholder="Type to search or create new category..."
-                :class="{ 'border-red-500': form.errors.category_name }"
-              />
-              <datalist id="categories">
-                <option 
-                  v-for="category in categories" 
-                  :key="category.id" 
-                  :value="category.name"
-                />
-              </datalist>
+              <Select :value="form.category_id?.toString() || ''" @update:value="handleCategoryChange">
+                <SelectTrigger :class="form.errors.category_id || form.errors.category_name ? 'border-red-500' : ''">
+                  <SelectValue 
+                    placeholder="Select a category" 
+                    :displayValue="selectedCategory?.name"
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem 
+                    v-for="category in categories" 
+                    :key="category.id" 
+                    :value="category.id.toString()"
+                  >
+                    <div class="flex items-center space-x-2">
+                      <div 
+                        class="w-3 h-3 rounded-full" 
+                        :style="{ backgroundColor: category.color }"
+                      ></div>
+                      <span>{{ category.name }}</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="new">
+                    <span class="text-blue-600">+ Create new category</span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <div v-if="form.errors.category_id" class="flex items-center space-x-1 text-sm text-red-600">
+                <AlertCircle class="h-4 w-4" />
+                <span>{{ form.errors.category_id }}</span>
+              </div>
               <div v-if="form.errors.category_name" class="flex items-center space-x-1 text-sm text-red-600">
                 <AlertCircle class="h-4 w-4" />
                 <span>{{ form.errors.category_name }}</span>
               </div>
-              <p class="text-sm text-muted-foreground">
-                Start typing to see existing categories or create a new one
-              </p>
+            </div>
+            
+            <!-- New Category Name -->
+            <div v-if="isNewCategory" class="space-y-2">
+              <Label for="category_name">New Category Name *</Label>
+              <Input
+                id="category_name"
+                v-model="form.category_name"
+                placeholder="Enter new category name"
+                :class="{ 'border-red-500': form.errors.category_name }"
+              />
+              <div v-if="form.errors.category_name" class="flex items-center space-x-1 text-sm text-red-600">
+                <AlertCircle class="h-4 w-4" />
+                <span>{{ form.errors.category_name }}</span>
+              </div>
             </div>
             
             <!-- Frequency -->
