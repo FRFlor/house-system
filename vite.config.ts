@@ -2,7 +2,7 @@ import vue from '@vitejs/plugin-vue';
 import laravel from 'laravel-vite-plugin';
 import path from 'path';
 import { resolve } from 'node:path';
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
@@ -30,5 +30,10 @@ export default defineConfig({
     },
     server: {
         host: "0.0.0.0"
+    },
+    test: {
+        environment: 'happy-dom',
+        globals: true,
+        setupFiles: ['./resources/js/test-setup.ts'],
     }
 });
