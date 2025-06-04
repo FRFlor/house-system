@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ChoreController;
+use App\Http\Controllers\ChoreCompletionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -20,6 +21,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/chores/{chore}/edit', [ChoreController::class, 'edit'])->name('chores.edit');
     Route::put('/chores/{chore}', [ChoreController::class, 'update'])->name('chores.update');
     Route::post('/chores/{chore}/complete', [ChoreController::class, 'complete'])->name('chores.complete');
+
+    Route::put('/completions/{completion}', [ChoreCompletionController::class, 'update'])->name('completions.update');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

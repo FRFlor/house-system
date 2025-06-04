@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Chore;
 use App\Models\ChoreCompletion;
+use App\Models\ChoreExpense;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -183,6 +184,9 @@ class ChoreController extends Controller
         $request->validate([
             'notes' => 'nullable|string|max:1000',
             'completed_at' => 'nullable|date',
+            'expenses' => 'nullable|array',
+            'expenses.*.amount' => 'required_with:expenses|numeric|min:0',
+            'expenses.*.description' => 'required_with:expenses|string|max:255',
         ]);
 
         $completedAt = $request->completed_at
@@ -193,11 +197,22 @@ class ChoreController extends Controller
         $chore->markAsCompleted($completedAt);
 
         // Create a completion record
-        ChoreCompletion::create([
+        $completion = ChoreCompletion::create([
             'chore_id' => $chore->id,
             'completed_at' => $completedAt,
             'notes' => $request->notes,
         ]);
+
+        // Create expense records if provided
+        if ($request->has('expenses') && is_array($request->expenses)) {
+            foreach ($request->expenses as $expense) {
+                ChoreExpense::create([
+                    'chore_completion_id' => $completion->id,
+                    'amount' => (int) round($expense['amount'] * 100), // Convert to cents
+                    'description' => $expense['description'],
+                ]);
+            }
+        }
 
         return redirect()->route('dashboard')
             ->with('success', "'{$chore->name}' has been marked as completed!");

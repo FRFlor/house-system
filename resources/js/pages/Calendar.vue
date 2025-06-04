@@ -4,6 +4,7 @@ import AppLayout from '@/layouts/AppLayout.vue'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import ChoreCompletionModal from '@/components/ChoreCompletionModal.vue'
+import ChoreCompletionEditModal from '@/components/ChoreCompletionEditModal.vue'
 import { ref, computed } from 'vue'
 import { ChevronLeft, ChevronRight, CheckCircle2, Clock, Calendar as CalendarIcon } from 'lucide-vue-next'
 
@@ -27,6 +28,11 @@ interface ChoreCompletion {
   id: number
   completed_at: string
   notes?: string
+  expenses: Array<{
+    id: number
+    description: string
+    amount: number
+  }>
   chore: {
     id: number
     name: string
@@ -45,16 +51,28 @@ interface Props {
 const props = defineProps<Props>()
 
 const selectedChore = ref<Chore | null>(null)
-const isModalOpen = ref(false)
+const selectedCompletion = ref<ChoreCompletion | null>(null)
+const isCompletionModalOpen = ref(false)
+const isEditModalOpen = ref(false)
 
 const openCompletionModal = (chore: Chore) => {
   selectedChore.value = chore
-  isModalOpen.value = true
+  isCompletionModalOpen.value = true
 }
 
 const closeCompletionModal = () => {
   selectedChore.value = null
-  isModalOpen.value = false
+  isCompletionModalOpen.value = false
+}
+
+const openEditModal = (completion: ChoreCompletion) => {
+  selectedCompletion.value = completion
+  isEditModalOpen.value = true
+}
+
+const closeEditModal = () => {
+  selectedCompletion.value = null
+  isEditModalOpen.value = false
 }
 
 // Calendar logic
@@ -214,8 +232,9 @@ const isToday = (day: number) => {
                 <!-- Completed chores -->
                 <div v-for="completion in getCompletionsForDate(day)" 
                      :key="`completion-${completion.id}`"
-                     class="text-xs p-1 rounded"
-                     :style="{ backgroundColor: completion.chore.category.color + '10', borderLeft: `3px solid ${completion.chore.category.color}` }">
+                     class="text-xs p-1 rounded cursor-pointer hover:opacity-80"
+                     :style="{ backgroundColor: completion.chore.category.color + '10', borderLeft: `3px solid ${completion.chore.category.color}` }"
+                     @click="openEditModal(completion)">
                   <div class="flex items-center space-x-1">
                     <CheckCircle2 class="h-3 w-3 text-green-600" />
                     <span class="truncate">{{ completion.chore.name }}</span>
@@ -232,9 +251,15 @@ const isToday = (day: number) => {
     </div>
     
     <ChoreCompletionModal
-      :open="isModalOpen"
+      :open="isCompletionModalOpen"
       :chore="selectedChore"
       @close="closeCompletionModal"
+    />
+    
+    <ChoreCompletionEditModal
+      :open="isEditModalOpen"
+      :completion="selectedCompletion"
+      @close="closeEditModal"
     />
   </AppLayout>
 </template> 

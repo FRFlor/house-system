@@ -38,8 +38,8 @@ class CalendarController extends Controller
                 ];
             });
 
-        // Get all completions within the month range
-        $completions = ChoreCompletion::with(['chore.category'])
+        // Get all completions within the month range, including expenses
+        $completions = ChoreCompletion::with(['chore.category', 'expenses'])
             ->whereDate('completed_at', '>=', $startDate->toDateString())
             ->whereDate('completed_at', '<=', $endDate->toDateString())
             ->get()
@@ -48,6 +48,13 @@ class CalendarController extends Controller
                     'id' => $completion->id,
                     'completed_at' => $completion->completed_at->toISOString(),
                     'notes' => $completion->notes,
+                    'expenses' => $completion->expenses->map(function ($expense) {
+                        return [
+                            'id' => $expense->id,
+                            'description' => $expense->description,
+                            'amount' => $expense->amount_in_dollars,
+                        ];
+                    }),
                     'chore' => [
                         'id' => $completion->chore->id,
                         'name' => $completion->chore->name,

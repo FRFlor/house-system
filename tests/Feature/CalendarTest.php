@@ -3,6 +3,7 @@
 use App\Models\Category;
 use App\Models\Chore;
 use App\Models\ChoreCompletion;
+use App\Models\ChoreExpense;
 use App\Models\User;
 use Carbon\Carbon;
 use Inertia\Testing\AssertableInertia;
@@ -74,6 +75,45 @@ it('displays completed chores with their completion data', function () {
                 ->pluck('id')->contains($completion->id)
             )
         );
+});
+
+it('displays completed chores with their expense data for editing', function () {
+    $category = Category::factory()->create();
+    $chore = Chore::factory()->create([
+        'category_id' => $category->id,
+        'next_due_at' => Carbon::yesterday(),
+    ]);
+
+    // Complete the chore
+    $completion = ChoreCompletion::factory()->create([
+        'chore_id' => $chore->id,
+        'completed_at' => Carbon::yesterday(),
+        'notes' => 'Test completion notes',
+    ]);
+
+    // Add expense to the completion
+    $expense = ChoreExpense::factory()->create([
+        'chore_completion_id' => $completion->id,
+        'amount' => 2550, // $25.50 in cents
+        'description' => 'Cleaning supplies',
+    ]);
+
+    $this
+        ->actingAs(User::factory()->create())
+        ->get('/calendar')
+        ->assertSuccessful()
+        ->assertInertia(function (AssertableInertia $page) use ($completion) {
+            return $page
+                ->has('completions')
+                ->where('completions', function ($completions) use ($completion) {
+                    $targetCompletion = collect($completions)->first(fn($c) => $c['id'] === $completion->id);
+                    return $targetCompletion && 
+                           isset($targetCompletion['expenses']) && 
+                           count($targetCompletion['expenses']) === 1 &&
+                           $targetCompletion['expenses'][0]['amount'] === 25.50 &&
+                           $targetCompletion['expenses'][0]['description'] === 'Cleaning supplies';
+                });
+        });
 });
 
 it('can filter calendar by specific month and year', function () {
