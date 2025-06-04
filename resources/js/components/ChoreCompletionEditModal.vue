@@ -5,25 +5,33 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { CheckCircle2, X, Plus, Trash2 } from 'lucide-vue-next';
+import { Edit, X, Plus, Trash2 } from 'lucide-vue-next';
 
-interface Chore {
+interface ChoreCompletion {
     id: number;
-    name: string;
-    category: {
+    completed_at: string;
+    notes?: string;
+    expenses: Expense[];
+    chore: {
+        id: number;
         name: string;
-        color: string;
+        description?: string;
+        category: {
+            id: number;
+            name: string;
+            color: string;
+        };
     };
-    description?: string;
 }
 
 interface Expense {
+    id?: number;
     description: string;
     amount: number;
 }
 
 interface Props {
-    chore: Chore | null;
+    completion: ChoreCompletion | null;
     open: boolean;
 }
 
@@ -49,19 +57,25 @@ const isOpen = computed({
     },
 });
 
-// Watch for modal opening to set default time
-watch(() => props.open, (isOpen) => {
-    if (isOpen && props.chore) {
-        // Set current LOCAL time as default when modal opens
-        completedAt.value = getCurrentLocalDateTime();
+// Watch for completion changes to populate form
+watch(() => props.completion, (completion) => {
+    if (completion) {
+        notes.value = completion.notes || '';
+        // Convert UTC timestamp to local datetime-local format
+        completedAt.value = convertUTCToLocalDateTime(completion.completed_at);
+        expenses.value = completion.expenses.map(expense => ({
+            description: expense.description,
+            amount: expense.amount,
+        }));
     }
-});
+}, { immediate: true });
 
-// Helper function to get current local time in datetime-local format
-const getCurrentLocalDateTime = () => {
-    const now = new Date();
-    // Get local time by adjusting for timezone offset
-    const localTime = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
+// Helper function to convert UTC timestamp to local datetime-local format
+const convertUTCToLocalDateTime = (utcTimestamp: string) => {
+    // Create Date object from UTC timestamp
+    const utcDate = new Date(utcTimestamp);
+    // Convert to local time by adjusting for timezone offset
+    const localTime = new Date(utcDate.getTime() - (utcDate.getTimezoneOffset() * 60000));
     // Format as YYYY-MM-DDTHH:mm for datetime-local input
     return localTime.toISOString().slice(0, 16);
 };
@@ -74,8 +88,8 @@ const removeExpense = (index: number) => {
     expenses.value = expenses.value.toSpliced(index, 1);
 };
 
-const completeChore = async () => {
-    if (!props.chore || isSubmitting.value) return;
+const updateCompletion = async () => {
+    if (!props.completion || isSubmitting.value) return;
 
     isSubmitting.value = true;
 
@@ -96,18 +110,15 @@ const completeChore = async () => {
             completedAtUTC = localDate.toISOString();
         }
 
-        await router.post(`/chores/${props.chore.id}/complete`, {
+        await router.put(`/completions/${props.completion.id}`, {
             notes: notes.value || null,
             completed_at: completedAtUTC,
             expenses: validExpenses.length > 0 ? validExpenses : null,
         });
 
-        notes.value = '';
-        completedAt.value = '';
-        expenses.value = [];
         emit('close');
     } catch (error) {
-        console.error('Error completing chore:', error);
+        console.error('Error updating completion:', error);
     } finally {
         isSubmitting.value = false;
     }
@@ -115,9 +126,6 @@ const completeChore = async () => {
 
 const closeModal = () => {
     if (isSubmitting.value) return;
-    notes.value = '';
-    completedAt.value = '';
-    expenses.value = [];
     emit('close');
 };
 
@@ -131,26 +139,36 @@ const totalExpenses = computed(() => {
             return total + amount;
         }, 0);
 });
+
+const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+};
 </script>
 
 <template>
     <Dialog v-model:open="isOpen">
         <DialogContent class="sm:max-w-lg">
-            <DialogDescription class="sr-only"> Complete Chore </DialogDescription>
+            <DialogDescription class="sr-only"> Edit Completion Details </DialogDescription>
             <DialogHeader>
                 <DialogTitle class="flex items-center space-x-2">
-                    <CheckCircle2 class="h-5 w-5 text-green-600" />
-                    <p>Complete Chore</p>
+                    <Edit class="h-5 w-5 text-blue-600" />
+                    <p>Edit Completion Details</p>
                 </DialogTitle>
             </DialogHeader>
 
-            <div v-if="chore" class="space-y-4">
+            <div v-if="completion" class="space-y-4">
                 <!-- Chore Info -->
                 <div class="bg-muted/50 rounded-lg border p-3">
-                    <h3 class="font-medium">{{ chore.name }}</h3>
+                    <h3 class="font-medium">{{ completion.chore.name }}</h3>
                     <div class="text-muted-foreground mt-1 flex items-center space-x-2 text-sm">
-                        <div class="h-2 w-2 rounded-full" :style="{ backgroundColor: chore.category.color }"></div>
-                        <span>{{ chore.category.name }}</span>
+                        <div class="h-2 w-2 rounded-full" :style="{ backgroundColor: completion.chore.category.color }"></div>
+                        <span>{{ completion.chore.category.name }}</span>
                     </div>
                 </div>
 
@@ -163,7 +181,6 @@ const totalExpenses = computed(() => {
                         type="datetime-local"
                         :disabled="isSubmitting"
                     />
-                    <p class="text-xs text-muted-foreground">Leave blank to use current time</p>
                 </div>
 
                 <!-- Notes Field -->
@@ -234,12 +251,12 @@ const totalExpenses = computed(() => {
                         <X class="mr-1 h-4 w-4" />
                         Cancel
                     </Button>
-                    <Button @click="completeChore" :disabled="isSubmitting">
-                        <CheckCircle2 class="mr-1 h-4 w-4" />
-                        {{ isSubmitting ? 'Completing...' : 'Complete' }}
+                    <Button @click="updateCompletion" :disabled="isSubmitting">
+                        <Edit class="mr-1 h-4 w-4" />
+                        {{ isSubmitting ? 'Updating...' : 'Update' }}
                     </Button>
                 </div>
             </DialogFooter>
         </DialogContent>
     </Dialog>
-</template>
+</template> 

@@ -190,4 +190,32 @@ test('chore update allows changing next_due_at for delay functionality', functio
         $chore->refresh();
         expect($chore->next_due_at->format('Y-m-d'))->toBe($delayedDate->format('Y-m-d'));
     }
+});
+
+test('chore completion validates completed_at format when completing chore', function () {
+    $chore = Chore::factory()->create();
+    
+    $response = $this->post(route('chores.complete', $chore), [
+        'notes' => 'Completed',
+        'completed_at' => 'invalid-date-format',
+    ]);
+
+    $response->assertSessionHasErrors(['completed_at']);
+});
+
+test('chore completion defaults to current time when completed_at not provided', function () {
+    $chore = Chore::factory()->create();
+    
+    $beforeCompletion = now()->subSecond(); // Give 1 second buffer
+    
+    $this->post(route('chores.complete', $chore), [
+        'notes' => 'Completed now',
+    ]);
+
+    $afterCompletion = now()->addSecond(); // Give 1 second buffer
+    
+    $completion = $chore->completions()->first();
+    expect($completion)->not->toBeNull();
+    expect($completion->completed_at)->toBeGreaterThanOrEqual($beforeCompletion);
+    expect($completion->completed_at)->toBeLessThanOrEqual($afterCompletion);
 }); 
