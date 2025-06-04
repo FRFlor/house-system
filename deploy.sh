@@ -17,3 +17,7 @@ docker compose exec app npm run build
 # Get the directory where this script is located and build absolute path
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 scp -r "$SCRIPT_DIR/public/build/." "$DEPLOY_SERVER:$DEPLOY_PATH"
+
+# Run migrations on the deployment server
+ssh "$DEPLOY_SERVER" "cd $DEPLOY_PATH/../.. && docker compose exec app php artisan migrate --force"
+
