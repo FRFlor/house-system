@@ -61,8 +61,13 @@ const isOpen = computed({
 watch(() => props.completion, (completion) => {
     if (completion) {
         notes.value = completion.notes || '';
-        // Convert UTC timestamp to local datetime-local format
-        completedAt.value = convertUTCToLocalDateTime(completion.completed_at);
+        // Use original completed_at if it exists, otherwise fallback to current time
+        if (completion.completed_at) {
+            completedAt.value = convertUTCToLocalDateTime(completion.completed_at);
+        } else {
+            // Fallback to current local time if completed_at is null
+            completedAt.value = getCurrentLocalDateTime();
+        }
         expenses.value = completion.expenses.map(expense => ({
             description: expense.description,
             amount: expense.amount,
@@ -76,6 +81,15 @@ const convertUTCToLocalDateTime = (utcTimestamp: string) => {
     const utcDate = new Date(utcTimestamp);
     // Convert to local time by adjusting for timezone offset
     const localTime = new Date(utcDate.getTime() - (utcDate.getTimezoneOffset() * 60000));
+    // Format as YYYY-MM-DDTHH:mm for datetime-local input
+    return localTime.toISOString().slice(0, 16);
+};
+
+// Helper function to get current local time in datetime-local format
+const getCurrentLocalDateTime = () => {
+    const now = new Date();
+    // Get local time by adjusting for timezone offset
+    const localTime = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
     // Format as YYYY-MM-DDTHH:mm for datetime-local input
     return localTime.toISOString().slice(0, 16);
 };
